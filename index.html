@@ -131,6 +131,24 @@
             color: #2b6cb0; /* Blue color for score */
             margin-bottom: 1rem;
         }
+        /* Lives display styling */
+        .lives-display {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .lives-display span {
+            font-size: 2.5rem; /* Larger heart size */
+            line-height: 1; /* Adjust line height for vertical alignment */
+            transition: color 0.3s ease-in-out;
+        }
+        .heart-active {
+            color: #ef4444; /* Red heart */
+        }
+        .heart-broken {
+            color: #cbd5e1; /* Greyed out heart */
+        }
 
         /* Modal styles */
         .modal {
@@ -205,6 +223,12 @@
     <div class="game-container">
         <h1 class="text-4xl font-bold text-gray-800 mb-4">행맨 게임</h1>
         <div id="scoreDisplay" class="score-display">점수: 0</div>
+        <!-- Lives Display -->
+        <div id="livesDisplay" class="lives-display" style="display: none;">
+            <span class="heart-active">❤️</span>
+            <span class="heart-active">❤️</span>
+            <span class="heart-active">❤️</span>
+        </div>
         <canvas id="hangmanCanvas"></canvas>
         <div id="wordDisplay" class="word-display text-blue-600"></div>
         <div id="message" class="message text-gray-700"></div>
@@ -268,6 +292,7 @@
         const resetButton = document.getElementById('resetButton');
         const guessedLettersDisplay = document.getElementById('guessedLetters');
         const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay'); // Get lives display element
 
         // Get game end modal elements
         const gameModal = document.getElementById('gameModal');
@@ -286,12 +311,10 @@
         const startGameButton = document.getElementById('startGameButton');
 
         // Game variables
-        // 기본 단어 목록을 1월부터 12월까지의 월 이름으로 변경
         let defaultWords = [
             "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
             "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
         ];
-        // words 변수는 이제 항상 defaultWords를 사용합니다.
         let words = [...defaultWords]; 
         let selectedWord = '';
         let guessedWord = [];
@@ -299,7 +322,26 @@
         let maxWrongGuesses = 5; 
         let guessedLetters = [];
         let gameActive = false;
-        let score = 0;
+        let score = 0; 
+        let lives = 3; // Initial lives
+        let isDefaultDifficulty = true; // New flag to check if default difficulty is active
+
+        // Function to draw hearts based on current lives
+        function drawHearts() {
+            console.log('drawHearts called. Current lives:', lives); // Log for debugging
+            const hearts = livesDisplay.children;
+            for (let i = 0; i < hearts.length; i++) {
+                if (i < lives) {
+                    hearts[i].textContent = '❤️'; // Active heart emoji
+                    hearts[i].classList.remove('heart-broken');
+                    hearts[i].classList.add('heart-active');
+                } else {
+                    hearts[i].textContent = '💔'; // Broken heart emoji
+                    hearts[i].classList.remove('heart-active');
+                    hearts[i].classList.add('heart-broken');
+                }
+            }
+        }
 
         // Set canvas size (responsive)
         function resizeCanvas() {
@@ -309,23 +351,27 @@
             drawHangman(); // Redraw when canvas size changes
         }
 
-        // Function to start a new game after difficulty selection
-        function startNewGame() {
-            maxWrongGuesses = parseInt(difficultySelectModal.value); // Get difficulty from modal
-            score = 0; // Reset score
-            scoreDisplay.textContent = `점수: ${score}`; // Update score display
+        // Function to set up a new game round (without touching score or difficulty modal)
+        function setupNewRound() {
+            scoreDisplay.textContent = `점수: ${score}`; // Update score display (score is cumulative or 0)
+            
+            // Only draw hearts if default difficulty is active
+            if (isDefaultDifficulty) {
+                livesDisplay.style.display = 'flex'; // Show hearts
+                drawHearts(); // 라운드 시작 시 현재 라이프 상태를 다시 그립니다.
+            } else {
+                livesDisplay.style.display = 'none'; // Hide hearts
+            }
 
-            // Select a word from the default 'words' array
             selectedWord = words[Math.floor(Math.random() * words.length)];
-
             guessedWord = Array(selectedWord.length).fill('_');
             wrongGuesses = 0;
-            guessedLetters = [];
+            guessedLetters = []; // Reset guessed letters array
             gameActive = true;
 
             wordDisplay.textContent = guessedWord.join(' ');
             messageDisplay.textContent = '글자를 추측해보세요!';
-            guessedLettersDisplay.textContent = '추측한 글자: ';
+            guessedLettersDisplay.textContent = '추측한 글자: '; // Reset guessed letters display
             guessInput.value = '';
             guessInput.disabled = false;
             guessButton.disabled = false;
@@ -334,11 +380,26 @@
             wholeWordGuessButton.disabled = false;
             wholeWordGuessMessage.textContent = '';
 
-            resizeCanvas(); // Set initial canvas size
-            drawHangman(); // Initialize hangman drawing
-            guessInput.focus(); // Focus on input field
+            resizeCanvas();
+            drawHangman();
+            guessInput.focus();
+        }
 
-            difficultyModal.style.display = 'none'; // Hide difficulty modal
+        // Function to handle starting game from difficulty modal
+        function startGameFromModal() {
+            maxWrongGuesses = parseInt(difficultySelectModal.value);
+            isDefaultDifficulty = (maxWrongGuesses === 5); // Set the flag based on selected difficulty
+
+            if (isDefaultDifficulty) {
+                score = 0; // Reset score for a new game session on default difficulty
+                lives = 3; // Reset lives for a new game session on default difficulty
+                console.log('startGameFromModal: Default difficulty selected. Lives set to:', lives);
+            } else {
+                score = 0; // Always reset score for any new game session (no accumulation)
+                console.log('startGameFromModal: Non-default difficulty selected. Score reset to:', score);
+            }
+            setupNewRound(); // This will now correctly draw hearts or not based on isDefaultDifficulty
+            difficultyModal.style.display = 'none'; // 모달 숨기기
         }
 
         // Draw hangman function
@@ -425,14 +486,17 @@
             }
 
             guessedLetters.push(guess);
+            console.log('Guessed Letters Array:', guessedLetters); // For debugging
             guessedLettersDisplay.textContent = `추측한 글자: ${guessedLetters.join(', ')}`;
 
             let correctGuessMade = false;
             for (let i = 0; i < selectedWord.length; i++) {
                 if (selectedWord[i] === guess) {
                     if (guessedWord[i] === '_') { // Only award points if the letter was not already revealed
-                        score += 10; // Add 10 points for correct letter
-                        scoreDisplay.textContent = `점수: ${score}`; // Update score display
+                        if (isDefaultDifficulty) { // Only add score if default difficulty
+                            score += 10; 
+                            scoreDisplay.textContent = `점수: ${score}`; 
+                        }
                     }
                     guessedWord[i] = guess;
                     correctGuessMade = true;
@@ -444,9 +508,9 @@
                 showMessage('정답입니다!', 'text-green-600');
                 if (!guessedWord.includes('_')) {
                     // Game win
-                    showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700'); // Corrected spelling
-                    showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700'); // Corrected spelling
-                    endGame();
+                    showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700');
+                    showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700');
+                    endGame('win'); // Pass 'win' to indicate round outcome
                 }
             } else {
                 // Wrong guess
@@ -455,10 +519,10 @@
                 showMessage(`틀렸습니다! 남은 기회: ${maxWrongGuesses - wrongGuesses}`, 'text-red-600');
 
                 if (wrongGuesses >= maxWrongGuesses) {
-                    // Game over
+                    // Game over (current round loss)
                     showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
-                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700'); // Corrected spelling
-                    endGame();
+                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
+                    endGame('loss'); // Pass 'loss' to indicate round outcome
                 }
             }
         }
@@ -479,24 +543,25 @@
             }
 
             if (wholeGuess === selectedWord) {
-                // Correct whole word guess
-                // Fill in all letters and calculate remaining points
-                let remainingPoints = 0;
-                for (let i = 0; i < selectedWord.length; i++) {
-                    if (guessedWord[i] === '_') {
-                        remainingPoints += 10; // Award points for unrevealed letters
+                // Correct whole word guess (current round win)
+                if (isDefaultDifficulty) { // Only add score if default difficulty
+                    let remainingPoints = 0;
+                    for (let i = 0; i < selectedWord.length; i++) {
+                        if (guessedWord[i] === '_') {
+                            remainingPoints += 10; // Award points for unrevealed letters
+                        }
+                        guessedWord[i] = selectedWord[i]; // Fill in all letters
                     }
-                    guessedWord[i] = selectedWord[i]; // Fill in all letters
+                    score += remainingPoints; // Add remaining points
+                    scoreDisplay.textContent = `점수: ${score}`; // Update score display
                 }
-                score += remainingPoints; // Add remaining points
-                scoreDisplay.textContent = `점수: ${score}`; // Update score display
 
                 wordDisplay.textContent = guessedWord.join(' ');
-                showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700'); // Corrected spelling
-                showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700'); // Corrected spelling
-                endGame();
+                showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700');
+                showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700');
+                endGame('win'); // Pass 'win' to indicate round outcome
             } else {
-                // Incorrect whole word guess
+                // Incorrect whole word guess (current round loss)
                 wrongGuesses++;
                 drawHangman(); // Update hangman drawing
                 wholeWordGuessMessage.textContent = '틀렸습니다!';
@@ -506,19 +571,23 @@
                 if (wrongGuesses >= maxWrongGuesses) {
                     // Game over
                     showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
-                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700'); // Corrected spelling
-                    endGame();
+                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
+                    endGame('loss'); // Pass 'loss' to indicate round outcome
                 }
             }
         }
 
-        // Function to end the game
-        function endGame() {
+        // Function to end the game (round)
+        function endGame(outcome) { // Added outcome parameter
             gameActive = false;
             guessInput.disabled = true;
             guessButton.disabled = true;
             wholeWordGuessInput.disabled = true;
             wholeWordGuessButton.disabled = true;
+
+            // Store the outcome for closeModal to use
+            gameModal.dataset.outcome = outcome;
+            console.log('endGame called. Outcome:', outcome); // Log the outcome
         }
 
         // Display message function
@@ -532,13 +601,39 @@
             modalMessage.textContent = msg;
             modalMessage.className = `text-lg font-semibold mb-4 ${colorClass}`;
             gameModal.style.display = 'flex'; // Set to flex for centering
-            // Focus on the modal close button to allow Enter key to close it
             modalCloseButton.focus(); 
         }
 
-        // Close game end modal function
+        // Close game end modal function (now automatically starts a new round)
         function closeModal() {
             gameModal.style.display = 'none';
+
+            const lastRoundOutcome = gameModal.dataset.outcome; // Get outcome from dataset
+            console.log('closeModal called. Last round outcome:', lastRoundOutcome, 'isDefaultDifficulty:', isDefaultDifficulty); // Log outcome and difficulty
+
+            if (isDefaultDifficulty && lastRoundOutcome === 'loss') { // Only affect lives if default difficulty
+                lives--; // 라운드 실패 시 라이프 감소
+                console.log('Lives decremented. Current lives:', lives); // Log lives
+                drawHearts(); // 라운드 실패 시 하트 UI 업데이트 (하트가 깨진 상태 유지)
+
+                if (lives === 0) {
+                    // 모든 라이프 소진 시 (3판 실패)
+                    score = 0; // 점수 초기화
+                    scoreDisplay.textContent = `점수: ${score}`;
+                    showMessage('3번의 기회를 모두 소진하여 점수가 초기화되었습니다!', 'text-red-700');
+                    console.log('All lives lost. Score reset. Lives reset to 3.');
+                    
+                    // 하트가 모두 깨진 상태를 잠시 보여준 후 초기화
+                    setTimeout(() => {
+                        lives = 3; // 라이프 초기화
+                        drawHearts(); // 하트 UI 초기화 (모두 활성)
+                        setupNewRound(); // 새 라운드 시작
+                    }, 1000); // 1초 지연 (사용자가 깨진 하트를 볼 수 있도록)
+                    return; // setTimeout 내에서 setupNewRound가 호출되므로 여기서 함수 종료
+                }
+            }
+            // 라이프가 남아있거나 라운드 승리 시, 또는 기본 난이도가 아닐 경우 바로 다음 라운드 시작
+            setupNewRound(); 
         }
 
         // Event listeners
@@ -562,10 +657,10 @@
         });
 
         // Event listener for difficulty selection modal's start game button
-        startGameButton.addEventListener('click', startNewGame);
+        startGameButton.addEventListener('click', startGameFromModal);
         difficultySelectModal.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
-                startNewGame();
+                startGameFromModal();
             }
         });
 
@@ -578,9 +673,10 @@
             }
         });
 
-        // NEW: Event listener to close game end modal with Enter key
+        // Event listener to close game end modal with Enter key
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && gameModal.style.display === 'flex') {
+                event.preventDefault(); // Prevent default Enter key behavior (e.g., submitting forms)
                 closeModal();
             }
         });
@@ -589,6 +685,8 @@
         window.onload = function () {
             difficultyModal.style.display = 'flex'; // Show difficulty modal first
             window.addEventListener('resize', resizeCanvas); // Resize canvas when window size changes
+            // drawHearts()는 이제 startGameFromModal 또는 setupNewRound에서 조건부로 호출됩니다.
+            // livesDisplay는 HTML에서 기본적으로 숨겨져 있습니다.
         };
     </script>
 </body>
