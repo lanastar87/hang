@@ -249,6 +249,13 @@
         <button id="resetButton" class="reset-button">새 게임</button>
     </div>
 
+    <!-- Loading Message Modal -->
+    <div id="loadingMessage" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <p class="text-lg font-semibold mb-4">단어 목록을 불러오는 중...</p>
+        </div>
+    </div>
+
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -300,15 +307,20 @@
 
         // Get difficulty selection modal elements
         const difficultyModal = document.getElementById('difficultyModal');
-        const difficultySelectModal = document.getElementById('difficultySelectModal');
+        const difficultySelectModal = document.getElementById('difficultySelectModal'); // Corrected assignment
         const startGameButton = document.getElementById('startGameButton');
+        
+        // Get loading message modal
+        const loadingMessage = document.getElementById('loadingMessage');
+
 
         // Game variables
-        let defaultWords = [
+        // 기본 단어 목록 (로딩 실패 시 대체용)
+        let defaultFallbackWords = [
             "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
             "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
         ];
-        let words = [...defaultWords]; 
+        let words = []; // 단어 목록은 이제 외부에서 불러옵니다.
         let selectedWord = '';
         let guessedWord = [];
         let wrongGuesses = 0;
@@ -319,12 +331,49 @@
         let lives = 3; // Initial lives
         let isDefaultDifficulty = true; // New flag to check if default difficulty is active
 
+        // Function to fetch words from the URL
+        async function loadWords() {
+            loadingMessage.style.display = 'flex'; // Show loading message
+            try {
+                // 사용자 요청에 따라 새로운 Google Apps Script URL로 변경
+                const url = 'https://script.google.com/macros/s/AKfycbwCfvPBCRbo1m4Nj8UJaGVOAt_jgrx-O1HtQqbyz-BQkjIgiTz8DQEzCe6QFiDSg_Av/exec';
+                console.log('Attempting to load words from URL:', url); // Log the URL being used
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                // Google Apps Script는 배열 안에 배열 형태로 데이터를 반환할 수 있으므로,
+                // 첫 번째 배열의 첫 번째 요소(단어)를 추출하도록 처리합니다.
+                // 데이터 구조에 따라 이 부분을 조정해야 할 수 있습니다.
+                if (Array.isArray(data) && data.length > 0) {
+                    words = data.map(item => {
+                        // 각 항목이 배열인 경우 첫 번째 요소를 단어로 사용
+                        if (Array.isArray(item) && item.length > 0) {
+                            return String(item[0]).toUpperCase();
+                        }
+                        // 단일 문자열인 경우 그대로 사용
+                        return String(item).toUpperCase();
+                    }).filter(word => word.length > 0); // 빈 문자열 제거
+                } else {
+                    throw new Error("Invalid data format received from URL.");
+                }
+                
+                console.log('Words loaded successfully. Total words:', words.length, 'Example word:', words[0]);
+            } catch (error) {
+                console.error('Failed to load words from the provided URL. Falling back to default words:', error);
+                messageDisplay.textContent = '단어 목록을 불러오지 못했습니다. 기본 단어로 시작합니다.';
+                messageDisplay.className = 'message text-orange-500';
+                words = [...defaultFallbackWords]; // Fallback to default words
+            } finally {
+                loadingMessage.style.display = 'none'; // Hide loading message
+            }
+        }
+
         // Function to draw hearts based on current lives
         function drawHearts() {
             console.log('drawHearts called. Current lives:', lives); // Log for debugging
             const hearts = livesDisplay.children;
-            // Ensure there are enough heart elements or dynamically create them if needed
-            // For now, assume 3 static heart elements in HTML
             for (let i = 0; i < hearts.length; i++) {
                 if (i < lives) {
                     hearts[i].textContent = '❤️'; // Active heart emoji
@@ -358,7 +407,16 @@
                 livesDisplay.style.display = 'none'; // Hide hearts
             }
 
+            // Ensure words array is not empty
+            if (words.length === 0) {
+                console.error("Word list is empty. Cannot start new round. Falling back to default words.");
+                messageDisplay.textContent = "단어 목록이 비어있습니다. 기본 단어로 시작합니다.";
+                messageDisplay.className = "message text-red-700";
+                words = [...defaultFallbackWords]; // Fallback if words array is unexpectedly empty
+            }
+
             selectedWord = words[Math.floor(Math.random() * words.length)];
+            console.log('New round started. Selected word:', selectedWord); // Log selected word
             guessedWord = Array(selectedWord.length).fill('_');
             wrongGuesses = 0;
             guessedLetters = []; // Reset guessed letters array
@@ -517,6 +575,7 @@
                     // Game over (current round loss)
                     showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
                     showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
+                    console.log('Round lost. Calling endGame with outcome "loss".'); // Log for loss
                     endGame('loss'); // Pass 'loss' to indicate round outcome
                 }
             }
@@ -567,6 +626,7 @@
                     // Game over
                     showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
                     showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
+                    console.log('Round lost (whole word guess). Calling endGame with outcome "loss".'); // Log for loss
                     endGame('loss'); // Pass 'loss' to indicate round outcome
                 }
             }
@@ -677,9 +737,10 @@
         });
 
         // Initialize game by showing the difficulty modal on window load
-        window.onload = function () {
-            difficultyModal.style.display = 'flex'; // Show difficulty modal first
+        window.onload = async function () {
             window.addEventListener('resize', resizeCanvas); // Resize canvas when window size changes
+            await loadWords(); // Load words first
+            difficultyModal.style.display = 'flex'; // Show difficulty modal after words are loaded
             // drawHearts()는 이제 startGameFromModal 또는 setupNewRound에서 조건부로 호출됩니다.
             // livesDisplay는 HTML에서 기본적으로 숨겨져 있습니다.
         };
