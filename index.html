@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>행맨 게임</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Inter 폰트 로드 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Soft background color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* Rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2.5rem;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        canvas {
+            background-color: #e2e8f0; /* Canvas background color */
+            border-radius: 0.75rem;
+            border: 1px solid #cbd5e1;
+            width: 100%; /* Responsive width */
+            max-width: 400px; /* Max width limit */
+            height: auto; /* Auto height */
+            aspect-ratio: 1 / 1; /* Maintain 1:1 aspect ratio */
+            margin: 0 auto; /* Center align */
+        }
+        .word-display {
+            letter-spacing: 0.5em; /* Letter spacing */
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            min-height: 3rem; /* Min height for layout stability */
+        }
+        .message {
+            font-size: 1.25rem;
+            font-weight: 600;
+            min-height: 1.5rem; /* Min height for layout stability */
+        }
+        .input-area {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Wrap on small screens */
+        }
+        .input-area input[type="text"],
+        .whole-word-guess-area input[type="text"] {
+            padding: 0.75rem 1rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            width: 80px; /* Fixed width for guess input */
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .whole-word-guess-area input[type="text"] {
+            width: 180px;
+        }
+        .input-area input[type="text"]:focus,
+        .whole-word-guess-area input[type="text"]:focus {
+            border-color: #4299e1; /* Border color on focus */
+        }
+        .input-area button,
+        .whole-word-guess-area button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4299e1; /* Blue button */
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        .input-area button:hover,
+        .whole-word-guess-area button:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+        .input-area button:active,
+        .whole-word-guess-area button:active {
+            transform: translateY(0); /* Reset on click */
+        }
+        .reset-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #ef4444; /* Red button */
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            margin-top: 1rem;
+        }
+        .reset-button:hover {
+            background-color: #dc2626; /* Darker red on hover */
+            transform: translateY(-2px);
+        }
+        .reset-button:active {
+            transform: translateY(0);
+        }
+        .guessed-letters {
+            font-size: 1.1rem;
+            color: #4a5568;
+            min-height: 1.5rem; /* Min height for layout stability */
+        }
+        .score-display { /* Score display styling */
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2b6cb0; /* Blue color for score */
+            margin-bottom: 1rem;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4); /* Semi-transparent background */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* Difficulty select styling within modal */
+        .difficulty-modal-content select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+            background-color: white;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        .difficulty-modal-content select:focus {
+            border-color: #4299e1;
+        }
+        .difficulty-modal-content button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4299e1;
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        .difficulty-modal-content button:hover {
+            background-color: #3182ce;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">행맨 게임</h1>
+        <div id="scoreDisplay" class="score-display">점수: 0</div>
+        <canvas id="hangmanCanvas"></canvas>
+        <div id="wordDisplay" class="word-display text-blue-600"></div>
+        <div id="message" class="message text-gray-700"></div>
+        <div id="guessedLetters" class="guessed-letters text-gray-600"></div>
+
+        <!-- Input area for guessing single letters -->
+        <div class="input-area flex-col sm:flex-row">
+            <input type="text" id="guessInput" maxlength="1" placeholder="입력">
+            <button id="guessButton">추측</button>
+        </div>
+
+        <!-- Area for guessing the whole word -->
+        <div class="whole-word-guess-area flex flex-col items-center gap-2 mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h2 class="text-xl font-semibold text-gray-700">전체 단어 추측</h2>
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full justify-center">
+                <input type="text" id="wholeWordGuessInput" placeholder="전체 단어 입력" class="flex-grow">
+                <button id="wholeWordGuessButton" class="whitespace-nowrap">단어 추측</button>
+            </div>
+            <div id="wholeWordGuessMessage" class="text-sm text-gray-500"></div>
+        </div>
+
+        <button id="resetButton" class="reset-button">새 게임</button>
+    </div>
+
+    <!-- Game End Modal -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modalMessage" class="text-lg font-semibold mb-4"></p>
+            <button id="modalCloseButton" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">확인</button>
+        </div>
+    </div>
+
+    <!-- Difficulty Selection Modal -->
+    <div id="difficultyModal" class="modal">
+        <div class="modal-content difficulty-modal-content">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">난이도 설정</h2>
+            <div class="flex flex-col items-center gap-2">
+                <label for="difficultySelectModal" class="text-lg text-gray-600">기회:</label>
+                <select id="difficultySelectModal" class="block w-auto">
+                    <option value="5" selected>5번 (기본)</option>
+                    <option value="6">6번</option>
+                    <option value="7">7번</option>
+                    <option value="8">8번</option>
+                    <option value="9">9번</option>
+                    <option value="10">10번</option>
+                </select>
+            </div>
+            <button id="startGameButton" class="mt-6">게임 시작</button>
+        </div>
+    </div>
+
+    <script>
+        // Get game elements
+        const canvas = document.getElementById('hangmanCanvas');
+        const ctx = canvas.getContext('2d');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const messageDisplay = document.getElementById('message');
+        const guessInput = document.getElementById('guessInput');
+        const guessButton = document.getElementById('guessButton');
+        const resetButton = document.getElementById('resetButton');
+        const guessedLettersDisplay = document.getElementById('guessedLetters');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+
+        // Get game end modal elements
+        const gameModal = document.getElementById('gameModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeButton = document.querySelector('#gameModal .close-button');
+        const modalCloseButton = document.getElementById('modalCloseButton');
+
+        // Get whole word guess related elements
+        const wholeWordGuessInput = document.getElementById('wholeWordGuessInput');
+        const wholeWordGuessButton = document.getElementById('wholeWordGuessButton');
+        const wholeWordGuessMessage = document.getElementById('wholeWordGuessMessage');
+
+        // Get difficulty selection modal elements
+        const difficultyModal = document.getElementById('difficultyModal');
+        const difficultySelectModal = document.getElementById('difficultySelectModal');
+        const startGameButton = document.getElementById('startGameButton');
+
+        // Game variables
+        // 기본 단어 목록을 1월부터 12월까지의 월 이름으로 변경
+        let defaultWords = [
+            "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+            "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+        ];
+        // words 변수는 이제 항상 defaultWords를 사용합니다.
+        let words = [...defaultWords]; 
+        let selectedWord = '';
+        let guessedWord = [];
+        let wrongGuesses = 0;
+        let maxWrongGuesses = 5; 
+        let guessedLetters = [];
+        let gameActive = false;
+        let score = 0;
+
+        // Set canvas size (responsive)
+        function resizeCanvas() {
+            const containerWidth = canvas.parentElement.clientWidth;
+            canvas.width = Math.min(containerWidth, 400); // Max 400px
+            canvas.height = canvas.width; // Maintain 1:1 aspect ratio
+            drawHangman(); // Redraw when canvas size changes
+        }
+
+        // Function to start a new game after difficulty selection
+        function startNewGame() {
+            maxWrongGuesses = parseInt(difficultySelectModal.value); // Get difficulty from modal
+            score = 0; // Reset score
+            scoreDisplay.textContent = `점수: ${score}`; // Update score display
+
+            // Select a word from the default 'words' array
+            selectedWord = words[Math.floor(Math.random() * words.length)];
+
+            guessedWord = Array(selectedWord.length).fill('_');
+            wrongGuesses = 0;
+            guessedLetters = [];
+            gameActive = true;
+
+            wordDisplay.textContent = guessedWord.join(' ');
+            messageDisplay.textContent = '글자를 추측해보세요!';
+            guessedLettersDisplay.textContent = '추측한 글자: ';
+            guessInput.value = '';
+            guessInput.disabled = false;
+            guessButton.disabled = false;
+            wholeWordGuessInput.value = '';
+            wholeWordGuessInput.disabled = false;
+            wholeWordGuessButton.disabled = false;
+            wholeWordGuessMessage.textContent = '';
+
+            resizeCanvas(); // Set initial canvas size
+            drawHangman(); // Initialize hangman drawing
+            guessInput.focus(); // Focus on input field
+
+            difficultyModal.style.display = 'none'; // Hide difficulty modal
+        }
+
+        // Draw hangman function
+        function drawHangman() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#334155'; // Dark gray
+
+            const scale = canvas.width / 400; // Scale based on 400px reference
+
+            // 교수대 기둥 (Gallows structure)
+            ctx.beginPath();
+            ctx.moveTo(50 * scale, 350 * scale);
+            ctx.lineTo(150 * scale, 350 * scale);
+            ctx.lineTo(100 * scale, 350 * scale);
+            ctx.lineTo(100 * scale, 50 * scale);
+            ctx.lineTo(250 * scale, 50 * scale);
+            ctx.lineTo(250 * scale, 100 * scale);
+            ctx.stroke();
+
+            // 단계별 행맨 그리기 (Draw hangman parts based on wrong guesses)
+            // The drawing logic is fixed for 6 parts. If maxWrongGuesses is higher,
+            // the hangman will be fully drawn before the game ends.
+            if (wrongGuesses > 0) {
+                // 머리 (Head)
+                ctx.beginPath();
+                ctx.arc(250 * scale, 130 * scale, 30 * scale, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            if (wrongGuesses > 1) {
+                // 몸통 (Body)
+                ctx.beginPath();
+                ctx.moveTo(250 * scale, 160 * scale);
+                ctx.lineTo(250 * scale, 260 * scale);
+                ctx.stroke();
+            }
+            if (wrongGuesses > 2) {
+                // 왼팔 (Left arm)
+                ctx.beginPath();
+                ctx.moveTo(250 * scale, 180 * scale);
+                ctx.lineTo(200 * scale, 230 * scale);
+                ctx.stroke();
+            }
+            if (wrongGuesses > 3) {
+                // 오른팔 (Right arm)
+                ctx.beginPath();
+                ctx.moveTo(250 * scale, 180 * scale);
+                ctx.lineTo(300 * scale, 230 * scale);
+                ctx.stroke();
+            }
+            if (wrongGuesses > 4) {
+                // 왼다리 (Left leg)
+                ctx.beginPath();
+                ctx.moveTo(250 * scale, 260 * scale);
+                ctx.lineTo(200 * scale, 310 * scale);
+                ctx.stroke();
+            }
+            if (wrongGuesses > 5) {
+                // 오른다리 (Right leg - This is the 6th part, so it will always be drawn if wrongGuesses >= 6)
+                ctx.beginPath();
+                ctx.moveTo(250 * scale, 260 * scale);
+                ctx.lineTo(300 * scale, 310 * scale);
+                ctx.stroke();
+            }
+        }
+
+        // Handle single letter guess function
+        function handleGuess() {
+            if (!gameActive) return;
+
+            const guess = guessInput.value.toUpperCase();
+            guessInput.value = ''; // Clear input field
+            guessInput.focus(); // Focus on input field
+
+            // Validation
+            if (!guess.match(/^[A-Z]$/)) {
+                showMessage('유효한 알파벳 한 글자를 입력해주세요.', 'text-red-500');
+                return;
+            }
+
+            if (guessedLetters.includes(guess)) {
+                showMessage(`이미 추측한 글자입니다: ${guess}`, 'text-yellow-600');
+                return;
+            }
+
+            guessedLetters.push(guess);
+            guessedLettersDisplay.textContent = `추측한 글자: ${guessedLetters.join(', ')}`;
+
+            let correctGuessMade = false;
+            for (let i = 0; i < selectedWord.length; i++) {
+                if (selectedWord[i] === guess) {
+                    if (guessedWord[i] === '_') { // Only award points if the letter was not already revealed
+                        score += 10; // Add 10 points for correct letter
+                        scoreDisplay.textContent = `점수: ${score}`; // Update score display
+                    }
+                    guessedWord[i] = guess;
+                    correctGuessMade = true;
+                }
+            }
+            wordDisplay.textContent = guessedWord.join(' ');
+
+            if (correctGuessMade) {
+                showMessage('정답입니다!', 'text-green-600');
+                if (!guessedWord.includes('_')) {
+                    // Game win
+                    showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700'); // Corrected spelling
+                    showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700'); // Corrected spelling
+                    endGame();
+                }
+            } else {
+                // Wrong guess
+                wrongGuesses++;
+                drawHangman(); // Update hangman drawing
+                showMessage(`틀렸습니다! 남은 기회: ${maxWrongGuesses - wrongGuesses}`, 'text-red-600');
+
+                if (wrongGuesses >= maxWrongGuesses) {
+                    // Game over
+                    showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
+                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700'); // Corrected spelling
+                    endGame();
+                }
+            }
+        }
+
+        // Handle whole word guess function
+        function handleWholeWordGuess() {
+            if (!gameActive) return;
+
+            const wholeGuess = wholeWordGuessInput.value.trim().toUpperCase();
+            wholeWordGuessInput.value = ''; // Clear input field
+            wholeWordGuessInput.focus(); // Focus on input field
+
+            // Validation
+            if (!wholeGuess.match(/^[A-Z]+$/)) {
+                wholeWordGuessMessage.textContent = '유효한 알파벳 단어를 입력해주세요.';
+                wholeWordGuessMessage.className = 'text-sm text-red-500 mt-2';
+                return;
+            }
+
+            if (wholeGuess === selectedWord) {
+                // Correct whole word guess
+                // Fill in all letters and calculate remaining points
+                let remainingPoints = 0;
+                for (let i = 0; i < selectedWord.length; i++) {
+                    if (guessedWord[i] === '_') {
+                        remainingPoints += 10; // Award points for unrevealed letters
+                    }
+                    guessedWord[i] = selectedWord[i]; // Fill in all letters
+                }
+                score += remainingPoints; // Add remaining points
+                scoreDisplay.textContent = `점수: ${score}`; // Update score display
+
+                wordDisplay.textContent = guessedWord.join(' ');
+                showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700'); // Corrected spelling
+                showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700'); // Corrected spelling
+                endGame();
+            } else {
+                // Incorrect whole word guess
+                wrongGuesses++;
+                drawHangman(); // Update hangman drawing
+                wholeWordGuessMessage.textContent = '틀렸습니다!';
+                wholeWordGuessMessage.className = 'text-sm text-red-600 mt-2';
+                showMessage(`틀렸습니다! 남은 기회: ${maxWrongGuesses - wrongGuesses}`, 'text-red-600');
+
+                if (wrongGuesses >= maxWrongGuesses) {
+                    // Game over
+                    showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
+                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700'); // Corrected spelling
+                    endGame();
+                }
+            }
+        }
+
+        // Function to end the game
+        function endGame() {
+            gameActive = false;
+            guessInput.disabled = true;
+            guessButton.disabled = true;
+            wholeWordGuessInput.disabled = true;
+            wholeWordGuessButton.disabled = true;
+        }
+
+        // Display message function
+        function showMessage(msg, colorClass) {
+            messageDisplay.textContent = msg;
+            messageDisplay.className = `message ${colorClass}`; // Apply Tailwind class
+        }
+
+        // Show game end modal function
+        function showModal(msg, colorClass) {
+            modalMessage.textContent = msg;
+            modalMessage.className = `text-lg font-semibold mb-4 ${colorClass}`;
+            gameModal.style.display = 'flex'; // Set to flex for centering
+            // Focus on the modal close button to allow Enter key to close it
+            modalCloseButton.focus(); 
+        }
+
+        // Close game end modal function
+        function closeModal() {
+            gameModal.style.display = 'none';
+        }
+
+        // Event listeners
+        guessButton.addEventListener('click', handleGuess);
+        guessInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                handleGuess();
+            }
+        });
+        // resetButton now shows the difficulty modal
+        resetButton.addEventListener('click', () => {
+            difficultyModal.style.display = 'flex'; // Directly show difficulty modal
+        });
+        
+        // Event listeners for whole word guess
+        wholeWordGuessButton.addEventListener('click', handleWholeWordGuess);
+        wholeWordGuessInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                handleWholeWordGuess();
+            }
+        });
+
+        // Event listener for difficulty selection modal's start game button
+        startGameButton.addEventListener('click', startNewGame);
+        difficultySelectModal.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                startNewGame();
+            }
+        });
+
+        // Modal close button events for game end modal
+        closeButton.addEventListener('click', closeModal);
+        modalCloseButton.addEventListener('click', closeModal);
+        window.addEventListener('click', (event) => {
+            if (event.target === gameModal) {
+                closeModal();
+            }
+        });
+
+        // NEW: Event listener to close game end modal with Enter key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && gameModal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+
+        // Initialize game by showing the difficulty modal on window load
+        window.onload = function () {
+            difficultyModal.style.display = 'flex'; // Show difficulty modal first
+            window.addEventListener('resize', resizeCanvas); // Resize canvas when window size changes
+        };
+    </script>
+</body>
+</html>
