@@ -213,7 +213,7 @@
 <body>
     <div class="game-container">
         <h1 class="text-3xl font-bold text-gray-800 mb-3">행맨 게임</h1>
-        <div id="scoreDisplay" class="score-display">점수: 0</div>
+        <div id="scoreDisplay" class="score-display" style="display: none;">점수: 0</div>
         <div id="livesDisplay" class="lives-display" style="display: none;">
             <span class="heart-active">❤️</span>
             <span class="heart-active">❤️</span>
@@ -222,14 +222,12 @@
         <canvas id="hangmanCanvas"></canvas>
         <div id="wordDisplay" class="word-display text-blue-600"></div>
         <div id="message" class="message text-gray-700"></div>
-        <div id="guessedLetters" class="guessed-letters text-gray-600"></div>
+        <div id="guessedLetters" class="guessed-letters text-gray-600" style="display: none;"></div>
 
         <div class="input-area flex-col sm:flex-row">
             <input type="text" id="guessInput" maxlength="1" placeholder="입력">
             <button id="guessButton">추측</button>
         </div>
-
-        <!-- 전체 단어 추측 기능 삭제됨 -->
 
         <button id="resetButton" class="reset-button">새 게임</button>
     </div>
@@ -306,10 +304,12 @@
         let wrongGuesses = 0;
         let maxWrongGuesses = 6; // Changed default maxWrongGuesses to 6
         let guessedLetters = [];
-        let gameActive = false;
-        let score = 0; 
+        let score = 0; // Cumulative score for default difficulty
+        let currentRoundPointsEarned = 0; // Points earned in the current round
         let lives = 3; // Initial lives
         let isDefaultDifficulty = true; // New flag to check if default difficulty is active
+        let gameActive = false; // Game active state
+        let lastSelectedWord = ''; // Stores the word from the previous round
 
         // Function to fetch words from the URL
         async function loadWords() {
@@ -377,16 +377,26 @@
 
         // Function to set up a new game round (without touching score or difficulty modal)
         function setupNewRound() {
-            scoreDisplay.textContent = `점수: ${score}`; // Update score display (score is cumulative or 0)
+            console.log('setupNewRound called. Current cumulative score:', score, 'isDefaultDifficulty:', isDefaultDifficulty); // Log score and difficulty
             
-            // Only draw hearts if default difficulty is active
-            if (isDefaultDifficulty) {
-                livesDisplay.style.display = 'flex'; // Show hearts
-                drawHearts(); // 라운드 시작 시 현재 라이프 상태를 다시 그립니다.
-            } else {
-                livesDisplay.style.display = 'none'; // Hide hearts
-            }
+            // Reset round-specific points
+            currentRoundPointsEarned = 0; // Reset for each new round
 
+            // 점수 및 하트 표시 여부 결정
+            if (isDefaultDifficulty) {
+                scoreDisplay.style.display = 'block'; // 기본 난이도일 때 점수 표시
+                livesDisplay.style.display = 'flex'; // 기본 난이도일 때 하트 표시
+                guessedLettersDisplay.style.display = 'block'; // 기본 난이도일 때 추측한 글자 표시
+                scoreDisplay.textContent = `점수: ${score}`; // 점수 업데이트 (누적)
+                drawHearts(); 
+            } else {
+                scoreDisplay.style.display = 'none'; // 연습 난이도일 때 점수 숨김
+                livesDisplay.style.display = 'none'; // 연습 난이도일 때 하트 숨김
+                guessedLettersDisplay.style.display = 'none'; // 연습 난이도일 때 추측한 글자 숨김
+                // 연습 모드에서는 score 변수가 누적되지 않으므로, 여기서는 초기화할 필요 없음.
+                // startGameFromModal에서 score = 0 처리됨.
+            }
+            
             // Ensure words array is not empty
             if (words.length === 0) {
                 console.error("Word list is empty. Cannot start new round. Falling back to default words.");
@@ -395,8 +405,15 @@
                 words = [...defaultFallbackWords]; // Fallback if words array is unexpectedly empty
             }
 
-            selectedWord = words[Math.floor(Math.random() * words.length)];
-            console.log('New round started. Selected word:', selectedWord); // Log selected word
+            // Select a new word, ensuring it's not the same as the last one
+            let newWord;
+            do {
+                newWord = words[Math.floor(Math.random() * words.length)];
+            } while (newWord === lastSelectedWord && words.length > 1); // Only loop if there's more than one word
+            selectedWord = newWord;
+            lastSelectedWord = selectedWord; // Store the newly selected word for the next round
+
+            console.log('New round selected word:', selectedWord); // Log selected word
             guessedWord = Array(selectedWord.length).fill('_');
             wrongGuesses = 0;
             guessedLetters = []; // Reset guessed letters array
@@ -404,11 +421,10 @@
 
             wordDisplay.textContent = guessedWord.join(' ');
             messageDisplay.textContent = '글자를 추측해보세요!';
-            guessedLettersDisplay.textContent = '추측한 글자: '; // Reset guessed letters display
+            guessedLettersDisplay.textContent = '추측한 글자: '; // Reset guessed letters display (will be hidden if !isDefaultDifficulty)
             guessInput.value = '';
             guessInput.disabled = false;
             guessButton.disabled = false;
-            // Removed whole word guess input/button disable/enable
             
             resizeCanvas();
             drawHangman();
@@ -421,11 +437,11 @@
             isDefaultDifficulty = (maxWrongGuesses === 6); // Changed default difficulty check to 6
 
             if (isDefaultDifficulty) {
-                score = 0; // Reset score for a new game session on default difficulty
-                lives = 3; // Reset lives for a new game session on default difficulty
+                // 기본 난이도일 경우 점수와 라이프는 '새 게임' 버튼 클릭 시에만 초기화됨
+                lives = 3; // 라이프는 매 새 게임 세션마다 초기화
                 console.log('startGameFromModal: Default difficulty (6) selected. Lives set to:', lives);
             } else {
-                score = 0; // Always reset score for any new game session (no accumulation)
+                score = 0; // 연습 난이도에서는 점수 초기화 (누적 점수를 표시하지 않으므로)
                 console.log('startGameFromModal: Non-default difficulty selected. Score reset to:', score);
             }
             setupNewRound(); // This will now correctly draw hearts or not based on isDefaultDifficulty
@@ -517,16 +533,25 @@
 
             guessedLetters.push(guess);
             console.log('Guessed Letters Array:', guessedLetters); // For debugging
-            guessedLettersDisplay.textContent = `추측한 글자: ${guessedLetters.join(', ')}`;
+
+            // Update guessed letters display only if score/lives are shown
+            if (isDefaultDifficulty) {
+                guessedLettersDisplay.textContent = `추측한 글자: ${guessedLetters.join(', ')}`;
+            } else {
+                guessedLettersDisplay.textContent = ''; // Clear for practice modes
+            }
+
 
             let correctGuessMade = false;
             for (let i = 0; i < selectedWord.length; i++) {
                 if (selectedWord[i] === guess) {
                     if (guessedWord[i] === '_') { // Only award points if the letter was not already revealed
                         if (isDefaultDifficulty) { // Only add score if default difficulty
-                            score += 10; 
+                            score += 10; // Update cumulative score
                             scoreDisplay.textContent = `점수: ${score}`; 
+                            console.log('Correct guess. Cumulative score updated to:', score); // Log score update
                         }
+                        currentRoundPointsEarned += 10; // Update round score regardless of difficulty (used for modal)
                     }
                     guessedWord[i] = guess;
                     correctGuessMade = true;
@@ -538,8 +563,10 @@
                 showMessage('정답입니다!', 'text-green-600');
                 if (!guessedWord.includes('_')) {
                     // Game win
+                    console.log('Round won. Current round points:', currentRoundPointsEarned);
                     showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700');
-                    showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700');
+                    // Display currentRoundPointsEarned for default, else an empty string
+                    showModal(`축하합니다! 단어를 맞혔습니다!${isDefaultDifficulty ? ' 점수: ' + currentRoundPointsEarned + '점' : ''}`, 'text-green-700');
                     endGame('win'); // Pass 'win' to indicate round outcome
                 }
             } else {
@@ -550,22 +577,21 @@
 
                 if (wrongGuesses >= maxWrongGuesses) {
                     // Game over (current round loss)
+                    console.log('Round lost. Current round points:', currentRoundPointsEarned);
                     showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
-                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
+                    // Display currentRoundPointsEarned for default, else an empty string
+                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다.${isDefaultDifficulty ? ' 점수: ' + currentRoundPointsEarned + '점' : ''}`, 'text-red-700');
                     console.log('Round lost. Calling endGame with outcome "loss".'); // Log for loss
                     endGame('loss'); // Pass 'loss' to indicate round outcome
                 }
             }
         }
 
-        // Removed handleWholeWordGuess function
-
         // Function to end the game (round)
         function endGame(outcome) { // Added outcome parameter
             gameActive = false;
             guessInput.disabled = true;
             guessButton.disabled = true;
-            // Removed whole word guess input/button disable
             
             // Store the outcome for closeModal to use
             gameModal.dataset.outcome = outcome;
@@ -627,11 +653,11 @@
         });
         // resetButton now shows the difficulty modal
         resetButton.addEventListener('click', () => {
+            score = 0; // '새 게임' 버튼 클릭 시 점수 초기화
+            lives = 3; // '새 게임' 버튼 클릭 시 라이프 초기화
             difficultyModal.style.display = 'flex'; // Directly show difficulty modal
         });
         
-        // Removed event listeners for whole word guess
-
         // Event listener for difficulty selection modal's start game button
         startGameButton.addEventListener('click', startGameFromModal);
         difficultySelectModal.addEventListener('keypress', (event) => {
