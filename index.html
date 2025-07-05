@@ -16,101 +16,93 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 16px; /* Reduced padding slightly */
             box-sizing: border-box;
         }
         .game-container {
             background-color: #ffffff;
             border-radius: 1.5rem; /* Rounded corners */
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            padding: 2.5rem;
-            max-width: 900px;
+            padding: 2rem; /* Reduced padding slightly */
+            max-width: 720px; /* Reduced max-width to 80% of 900px */
             width: 100%;
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.2rem; /* Adjusted gap slightly */
         }
         canvas {
             background-color: #e2e8f0; /* Canvas background color */
             border-radius: 0.75rem;
             border: 1px solid #cbd5e1;
             width: 100%; /* Responsive width */
-            max-width: 400px; /* Max width limit */
+            max-width: 320px; /* Reduced max width to 80% of 400px */
             height: auto; /* Auto height */
             aspect-ratio: 1 / 1; /* Maintain 1:1 aspect ratio */
             margin: 0 auto; /* Center align */
         }
         .word-display {
-            letter-spacing: 0.5em; /* Letter spacing */
-            font-size: 2.5rem;
+            letter-spacing: 0.4em; /* Adjusted letter spacing for smaller size */
+            font-size: 2rem; /* Adjusted font size */
             font-weight: 700;
             color: #1a202c;
-            min-height: 3rem; /* Min height for layout stability */
+            min-height: 2.5rem; /* Min height for layout stability */
         }
         .message {
-            font-size: 1.25rem;
+            font-size: 1.1rem; /* Adjusted font size */
             font-weight: 600;
-            min-height: 1.5rem; /* Min height for layout stability */
+            min-height: 1.2rem; /* Min height for layout stability */
         }
         .input-area {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.6rem; /* Adjusted gap */
             justify-content: center;
             align-items: center;
             flex-wrap: wrap; /* Wrap on small screens */
         }
-        .input-area input[type="text"],
-        .whole-word-guess-area input[type="text"] {
-            padding: 0.75rem 1rem;
+        .input-area input[type="text"] {
+            padding: 0.6rem 0.8rem; /* Adjusted padding */
             border: 2px solid #cbd5e1;
-            border-radius: 0.5rem;
-            font-size: 1.25rem;
+            border-radius: 0.4rem; /* Adjusted border radius */
+            font-size: 1.1rem; /* Adjusted font size */
             text-transform: uppercase;
-            width: 80px; /* Fixed width for guess input */
+            width: 64px; /* Reduced width for guess input (80% of 80px) */
             text-align: center;
             outline: none;
             transition: border-color 0.2s ease-in-out;
         }
-        .whole-word-guess-area input[type="text"] {
-            width: 180px;
-        }
-        .input-area input[type="text"]:focus,
-        .whole-word-guess-area input[type="text"]:focus {
+        .input-area input[type="text"]:focus {
             border-color: #4299e1; /* Border color on focus */
         }
-        .input-area button,
-        .whole-word-guess-area button {
-            padding: 0.75rem 1.5rem;
+        .input-area button {
+            padding: 0.6rem 1.2rem; /* Adjusted padding */
             background-color: #4299e1; /* Blue button */
             color: white;
-            border-radius: 0.5rem;
-            font-size: 1.25rem;
+            border-radius: 0.4rem; /* Adjusted border radius */
+            font-size: 1.1rem; /* Adjusted font size */
             font-weight: 600;
             cursor: pointer;
             border: none;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
         }
-        .input-area button:hover,
-        .whole-word-guess-area button:hover {
+        .input-area button:hover {
             background-color: #3182ce; /* Darker blue on hover */
             transform: translateY(-2px); /* Slight lift on hover */
         }
-        .input-area button:active,
-        .whole-word-guess-area button:active {
+        .input-area button:active {
             transform: translateY(0); /* Reset on click */
         }
         .reset-button {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem; /* Adjusted padding */
             background-color: #ef4444; /* Red button */
             color: white;
-            border-radius: 0.5rem;
-            font-size: 1.25rem;
+            border-radius: 0.4rem; /* Adjusted border radius */
+            font-size: 1.1rem; /* Adjusted font size */
             font-weight: 600;
             cursor: pointer;
             border: none;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-            margin-top: 1rem;
+            margin-top: 0.8rem; /* Adjusted margin */
         }
         .reset-button:hover {
             background-color: #dc2626; /* Darker red on hover */
@@ -120,25 +112,25 @@
             transform: translateY(0);
         }
         .guessed-letters {
-            font-size: 1.1rem;
+            font-size: 1rem; /* Adjusted font size */
             color: #4a5568;
-            min-height: 1.5rem; /* Min height for layout stability */
+            min-height: 1.2rem; /* Min height for layout stability */
         }
         .score-display { /* Score display styling */
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Adjusted font size */
             font-weight: 700;
             color: #2b6cb0; /* Blue color for score */
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem; /* Adjusted margin */
         }
         /* Lives display styling */
         .lives-display {
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.4rem; /* Adjusted gap */
+            margin-bottom: 0.8rem; /* Adjusted margin */
         }
         .lives-display span {
-            font-size: 2.5rem; /* Larger heart size */
+            font-size: 2rem; /* Adjusted heart size */
             line-height: 1; /* Adjust line height for vertical alignment */
             transition: color 0.3s ease-in-out;
         }
@@ -166,18 +158,18 @@
         .modal-content {
             background-color: #fefefe;
             margin: auto;
-            padding: 20px;
+            padding: 16px; /* Adjusted padding */
             border: 1px solid #888;
             width: 80%;
-            max-width: 400px;
-            border-radius: 1rem;
+            max-width: 320px; /* Adjusted max-width */
+            border-radius: 0.8rem; /* Adjusted border radius */
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Adjusted shadow */
         }
         .close-button {
             color: #aaa;
             float: right;
-            font-size: 28px;
+            font-size: 24px; /* Adjusted font size */
             font-weight: bold;
         }
         .close-button:hover,
@@ -188,25 +180,25 @@
         }
         /* Difficulty select styling within modal */
         .difficulty-modal-content select {
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.8rem; /* Adjusted padding */
             border: 2px solid #cbd5e1;
-            border-radius: 0.5rem;
-            font-size: 1.25rem;
+            border-radius: 0.4rem; /* Adjusted border radius */
+            font-size: 1.1rem; /* Adjusted font size */
             outline: none;
             transition: border-color 0.2s ease-in-out;
             background-color: white;
             cursor: pointer;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem; /* Adjusted margin */
         }
         .difficulty-modal-content select:focus {
             border-color: #4299e1;
         }
         .difficulty-modal-content button {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem; /* Adjusted padding */
             background-color: #4299e1;
             color: white;
-            border-radius: 0.5rem;
-            font-size: 1.25rem;
+            border-radius: 0.4rem; /* Adjusted border radius */
+            font-size: 1.1rem; /* Adjusted font size */
             font-weight: 600;
             cursor: pointer;
             border: none;
@@ -220,7 +212,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">행맨 게임</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-3">행맨 게임</h1>
         <div id="scoreDisplay" class="score-display">점수: 0</div>
         <div id="livesDisplay" class="lives-display" style="display: none;">
             <span class="heart-active">❤️</span>
@@ -237,14 +229,7 @@
             <button id="guessButton">추측</button>
         </div>
 
-        <div class="whole-word-guess-area flex flex-col items-center gap-2 mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <h2 class="text-xl font-semibold text-gray-700">전체 단어 추측</h2>
-            <div class="flex flex-col sm:flex-row items-center gap-2 w-full justify-center">
-                <input type="text" id="wholeWordGuessInput" placeholder="전체 단어 입력" class="flex-grow">
-                <button id="wholeWordGuessButton" class="whitespace-nowrap">단어 추측</button>
-            </div>
-            <div id="wholeWordGuessMessage" class="text-sm text-gray-500"></div>
-        </div>
+        <!-- 전체 단어 추측 기능 삭제됨 -->
 
         <button id="resetButton" class="reset-button">새 게임</button>
     </div>
@@ -260,7 +245,7 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <p id="modalMessage" class="text-lg font-semibold mb-4"></p>
-            <button id="modalCloseButton" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">확인</button>
+            <button id="modalCloseButton" class="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">확인</button>
         </div>
     </div>
 
@@ -300,14 +285,9 @@
         const closeButton = document.querySelector('#gameModal .close-button');
         const modalCloseButton = document.getElementById('modalCloseButton');
 
-        // Get whole word guess related elements
-        const wholeWordGuessInput = document.getElementById('wholeWordGuessInput');
-        const wholeWordGuessButton = document.getElementById('wholeWordGuessButton');
-        const wholeWordGuessMessage = document.getElementById('wholeWordGuessMessage');
-
         // Get difficulty selection modal elements
         const difficultyModal = document.getElementById('difficultyModal');
-        const difficultySelectModal = document.getElementById('difficultySelectModal'); // Corrected assignment
+        const difficultySelectModal = document.getElementById('difficultySelectModal');
         const startGameButton = document.getElementById('startGameButton');
         
         // Get loading message modal
@@ -390,7 +370,7 @@
         // Set canvas size (responsive)
         function resizeCanvas() {
             const containerWidth = canvas.parentElement.clientWidth;
-            canvas.width = Math.min(containerWidth, 400); // Max 400px
+            canvas.width = Math.min(containerWidth, 320); // Max 320px (80% of original 400px)
             canvas.height = canvas.width; // Maintain 1:1 aspect ratio
             drawHangman(); // Redraw when canvas size changes
         }
@@ -428,11 +408,8 @@
             guessInput.value = '';
             guessInput.disabled = false;
             guessButton.disabled = false;
-            wholeWordGuessInput.value = '';
-            wholeWordGuessInput.disabled = false;
-            wholeWordGuessButton.disabled = false;
-            wholeWordGuessMessage.textContent = '';
-
+            // Removed whole word guess input/button disable/enable
+            
             resizeCanvas();
             drawHangman();
             guessInput.focus();
@@ -461,7 +438,7 @@
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#334155'; // Dark gray
 
-            const scale = canvas.width / 400; // Scale based on 400px reference
+            const scale = canvas.width / 400; // Scale based on original 400px reference
 
             // 교수대 기둥 (Gallows structure)
             ctx.beginPath();
@@ -581,65 +558,15 @@
             }
         }
 
-        // Handle whole word guess function
-        function handleWholeWordGuess() {
-            if (!gameActive) return;
-
-            const wholeGuess = wholeWordGuessInput.value.trim().toUpperCase();
-            wholeWordGuessInput.value = ''; // Clear input field
-            wholeWordGuessInput.focus(); // Focus on input field
-
-            // Validation
-            if (!wholeGuess.match(/^[A-Z]+$/)) {
-                wholeWordGuessMessage.textContent = '유효한 알파벳 단어를 입력해주세요.';
-                wholeWordGuessMessage.className = 'text-sm text-red-500 mt-2';
-                return;
-            }
-
-            if (wholeGuess === selectedWord) {
-                // Correct whole word guess (current round win)
-                if (isDefaultDifficulty) { // Only add score if default difficulty
-                    let remainingPoints = 0;
-                    for (let i = 0; i < selectedWord.length; i++) {
-                        if (guessedWord[i] === '_') {
-                            remainingPoints += 10; // Award points for unrevealed letters
-                        }
-                        guessedWord[i] = selectedWord[i]; // Fill in all letters
-                    }
-                    score += remainingPoints; // Add remaining points
-                    scoreDisplay.textContent = `점수: ${score}`; // Update score display
-                }
-
-                wordDisplay.textContent = guessedWord.join(' ');
-                showMessage('축하합니다! 단어를 맞혔습니다!', 'text-green-700');
-                showModal(`축하합니다! 단어를 맞혔습니다! 최종 점수: ${score}점`, 'text-green-700');
-                endGame('win'); // Pass 'win' to indicate round outcome
-            } else {
-                // Incorrect whole word guess (current round loss)
-                wrongGuesses++;
-                drawHangman(); // Update hangman drawing
-                wholeWordGuessMessage.textContent = '틀렸습니다!';
-                wholeWordGuessMessage.className = 'text-sm text-red-600 mt-2';
-                showMessage(`틀렸습니다! 남은 기회: ${maxWrongGuesses - wrongGuesses}`, 'text-red-600');
-
-                if (wrongGuesses >= maxWrongGuesses) {
-                    // Game over
-                    showMessage(`게임 오버! 정답은 "${selectedWord}"였습니다.`, 'text-red-700');
-                    showModal(`게임 오버! 정답은 "${selectedWord}"였습니다. 최종 점수: ${score}점`, 'text-red-700');
-                    console.log('Round lost (whole word guess). Calling endGame with outcome "loss".'); // Log for loss
-                    endGame('loss'); // Pass 'loss' to indicate round outcome
-                }
-            }
-        }
+        // Removed handleWholeWordGuess function
 
         // Function to end the game (round)
         function endGame(outcome) { // Added outcome parameter
             gameActive = false;
             guessInput.disabled = true;
             guessButton.disabled = true;
-            wholeWordGuessInput.disabled = true;
-            wholeWordGuessButton.disabled = true;
-
+            // Removed whole word guess input/button disable
+            
             // Store the outcome for closeModal to use
             gameModal.dataset.outcome = outcome;
             console.log('endGame called. Outcome:', outcome); // Log the outcome
@@ -703,13 +630,7 @@
             difficultyModal.style.display = 'flex'; // Directly show difficulty modal
         });
         
-        // Event listeners for whole word guess
-        wholeWordGuessButton.addEventListener('click', handleWholeWordGuess);
-        wholeWordGuessInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                handleWholeWordGuess();
-            }
-        });
+        // Removed event listeners for whole word guess
 
         // Event listener for difficulty selection modal's start game button
         startGameButton.addEventListener('click', startGameFromModal);
