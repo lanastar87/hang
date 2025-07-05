@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>행맨 게임</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Inter 폰트 로드 */
@@ -223,9 +222,8 @@
     <div class="game-container">
         <h1 class="text-4xl font-bold text-gray-800 mb-4">행맨 게임</h1>
         <div id="scoreDisplay" class="score-display">점수: 0</div>
-        <!-- Lives Display -->
         <div id="livesDisplay" class="lives-display" style="display: none;">
-            <span class="heart-active">❤️</span>
+            <span class="heart-active"❤️</span>
             <span class="heart-active">❤️</span>
             <span class="heart-active">❤️</span>
         </div>
@@ -234,13 +232,11 @@
         <div id="message" class="message text-gray-700"></div>
         <div id="guessedLetters" class="guessed-letters text-gray-600"></div>
 
-        <!-- Input area for guessing single letters -->
         <div class="input-area flex-col sm:flex-row">
             <input type="text" id="guessInput" maxlength="1" placeholder="입력">
             <button id="guessButton">추측</button>
         </div>
 
-        <!-- Area for guessing the whole word -->
         <div class="whole-word-guess-area flex flex-col items-center gap-2 mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
             <h2 class="text-xl font-semibold text-gray-700">전체 단어 추측</h2>
             <div class="flex flex-col sm:flex-row items-center gap-2 w-full justify-center">
@@ -253,7 +249,6 @@
         <button id="resetButton" class="reset-button">새 게임</button>
     </div>
 
-    <!-- Game End Modal -->
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -262,15 +257,13 @@
         </div>
     </div>
 
-    <!-- Difficulty Selection Modal -->
     <div id="difficultyModal" class="modal">
         <div class="modal-content difficulty-modal-content">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">난이도 설정</h2>
             <div class="flex flex-col items-center gap-2">
                 <label for="difficultySelectModal" class="text-lg text-gray-600">기회:</label>
                 <select id="difficultySelectModal" class="block w-auto">
-                    <option value="5" selected>5번 (기본)</option>
-                    <option value="6">6번</option>
+                    <option value="6" selected>6번 (기본)</option>
                     <option value="7">7번</option>
                     <option value="8">8번</option>
                     <option value="9">9번</option>
@@ -319,7 +312,7 @@
         let selectedWord = '';
         let guessedWord = [];
         let wrongGuesses = 0;
-        let maxWrongGuesses = 5; 
+        let maxWrongGuesses = 6; // Changed default maxWrongGuesses to 6
         let guessedLetters = [];
         let gameActive = false;
         let score = 0; 
@@ -330,6 +323,8 @@
         function drawHearts() {
             console.log('drawHearts called. Current lives:', lives); // Log for debugging
             const hearts = livesDisplay.children;
+            // Ensure there are enough heart elements or dynamically create them if needed
+            // For now, assume 3 static heart elements in HTML
             for (let i = 0; i < hearts.length; i++) {
                 if (i < lives) {
                     hearts[i].textContent = '❤️'; // Active heart emoji
@@ -388,12 +383,12 @@
         // Function to handle starting game from difficulty modal
         function startGameFromModal() {
             maxWrongGuesses = parseInt(difficultySelectModal.value);
-            isDefaultDifficulty = (maxWrongGuesses === 5); // Set the flag based on selected difficulty
+            isDefaultDifficulty = (maxWrongGuesses === 6); // Changed default difficulty check to 6
 
             if (isDefaultDifficulty) {
                 score = 0; // Reset score for a new game session on default difficulty
                 lives = 3; // Reset lives for a new game session on default difficulty
-                console.log('startGameFromModal: Default difficulty selected. Lives set to:', lives);
+                console.log('startGameFromModal: Default difficulty (6) selected. Lives set to:', lives);
             } else {
                 score = 0; // Always reset score for any new game session (no accumulation)
                 console.log('startGameFromModal: Non-default difficulty selected. Score reset to:', score);
