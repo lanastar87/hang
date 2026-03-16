@@ -316,7 +316,7 @@
             loadingMessage.style.display = 'flex'; // Show loading message
             try {
                 // 사용자 요청에 따라 새로운 Google Apps Script URL로 변경
-                const url = 'https://script.google.com/macros/s/AKfycbwCfvPBCRbo1m4Nj8UJaGVOAt_jgrx-O1HtQqbyz-BQkjIgiTz8DQEzCe6QFiDSg_Av/exec' + Date.now();
+                const url = 'https://script.google.com/macros/s/AKfycbwCfvPBCRbo1m4Nj8UJaGVOAt_jgrx-O1HtQqbyz-BQkjIgiTz8DQEzCe6QFiDSg_Av/exec?t=' + Date.now();
                 console.log('Attempting to load words from URL:', url); // Log the URL being used
                 const response = await fetch(url);
                 if (!response.ok) {
